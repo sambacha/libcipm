@@ -322,7 +322,7 @@ class Installer {
   updateFromField (dep, pkg) {
     const depPath = dep.path(this.prefix)
     const depPkgPath = path.join(depPath, 'package.json')
-    const parent = dep.requiredBy.values().next().value
+    const parent = this.findParent(dep)
     if (!this.checkDepEnv(parent)) return BB.resolve(pkg)
 
     return readJson(parent.path(this.prefix), 'package.json')
@@ -335,6 +335,16 @@ class Installer {
       .then(from => { pkg._from = from.toString() })
       .then(() => writeFileAsync(depPkgPath, JSON.stringify(pkg, null, 2)))
       .then(() => pkg)
+  }
+
+    findParent (dep) {
+    for (const parent of dep.requiredBy.values()) {
+      if (this.checkDepEnv(parent)) {
+        return parent
+      }
+    }
+
+    return null
   }
 
   updateInstallScript (dep, pkg) {
